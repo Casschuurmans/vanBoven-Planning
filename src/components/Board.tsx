@@ -112,6 +112,9 @@ export function Board({ data, week, setWeek, thisWeek, actions, ui }: Props) {
 
   return (
     <>
+      <div className="print-head">
+        <b>Van Boven Aannemers</b> · Weekplanning · {weekLabel(week)}
+      </div>
       <div className="page-head">
         <div>
           <h1>Weekplanning</h1>
@@ -129,6 +132,9 @@ export function Board({ data, week, setWeek, thisWeek, actions, ui }: Props) {
           </button>
           <button className="btn" onClick={copyWeek}>
             Kopieer week naar volgende week
+          </button>
+          <button className="btn" onClick={() => window.print()}>
+            Afdrukken / PDF
           </button>
           <button className="btn primary" onClick={() => ui.openAssign({ date: week })}>
             + Inplannen
@@ -292,7 +298,9 @@ export function Board({ data, week, setWeek, thisWeek, actions, ui }: Props) {
         </span>
       </div>
 
-      <Needs data={data} days={days} />
+      <div className="no-print">
+        <Needs data={data} days={days} />
+      </div>
     </>
   );
 }
