@@ -233,3 +233,28 @@ body { margin: 0; }
 .live i { width: 8px; height: 8px; border-radius: 50%; background: #5ad08c; display: inline-block; }
 .live.off i { background: #e0a030; }
 .banner { background: var(--bad-bg); color: var(--bad); padding: 10px 14px; border-radius: 6px; margin-bottom: 14px; }
+
+/* Afdrukken: één liggend A4-blad met alleen het weekbord */
+.print-head { display: none; }
+@media print {
+  @page { size: A4 landscape; margin: 8mm; }
+  :root { color-scheme: light; }
+  html, body { background: #fff !important; color: #000 !important; font-size: 10px; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .top, .palette, .page-head, .no-print, .add, .toast, .ov, .banner { display: none !important; }
+  .wrap { max-width: none; padding: 0; }
+  main { padding: 0; }
+  .print-head { display: block; font-family: var(--font-head); font-size: 16px; margin-bottom: 6px; color: #002C84; }
+  .board-scroll { overflow: visible; border: 0; border-radius: 0; background: #fff; }
+  table.board { min-width: 0; width: 100%; }
+  .board thead th, .board th.who, .board tfoot th, .board thead th.corner { position: static; width: auto; min-width: 0; padding: 3px 5px; }
+  .board th.who { width: 110px; }
+  td.cell { min-width: 0; padding: 3px; }
+  .board tfoot td, .board tfoot th { padding: 3px 5px; }
+  .chip { padding: 2px 5px; font-size: 9px; margin-bottom: 2px; }
+  .chip .tm { font-size: 8.5px; }
+  .abs { padding: 2px 5px; font-size: 9px; margin-bottom: 2px; }
+  .free, .nw-l { font-size: 9px; padding: 1px 3px; }
+  .legend { margin-top: 6px; font-size: 9px; }
+  tr, td, th { break-inside: avoid; }
+}
