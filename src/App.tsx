@@ -144,7 +144,7 @@ function Shell({ session }: { session: Session }) {
           <Board data={data} week={week} setWeek={setWeek} thisWeek={mondayOf(todayISO())} actions={actions} ui={ui} />
         )}
         {status === 'ready' && tab === 'projecten' && <ProjectsView data={data} ui={ui} />}
-        {status === 'ready' && tab === 'medewerkers' && <EmployeesView data={data} ui={ui} />}
+        {status === 'ready' && tab === 'medewerkers' && <EmployeesView data={data} ui={ui} actions={actions} />}
         {status === 'ready' && tab === 'afwezigheid' && <AbsencesView data={data} ui={ui} />}
       </main>
 

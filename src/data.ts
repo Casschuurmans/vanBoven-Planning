@@ -14,8 +14,16 @@ const mapEmp = (r: Row): Employee => ({
   days: ((r.work_days ?? []) as number[]).slice().sort(),
   avail: r.availability ?? '',
   notes: r.notes ?? '',
+  order: r.sort_order ?? 0,
 });
-const rowEmp = (e: Employee) => ({ name: e.name, role: e.role, work_days: e.days, availability: e.avail, notes: e.notes });
+const rowEmp = (e: Employee) => ({
+  name: e.name,
+  role: e.role,
+  work_days: e.days,
+  availability: e.avail,
+  notes: e.notes,
+  sort_order: e.order,
+});
 
 const mapProj = (r: Row): Project => ({
   id: r.id,
@@ -211,7 +219,12 @@ export function usePlanningData() {
     [reload],
   );
 
-  return { data, status, error, live, actions, reload };
+  const sorted = useMemo<Data>(
+    () => ({ ...data, employees: data.employees.slice().sort((a, b) => a.order - b.order || a.name.localeCompare(b.name)) }),
+    [data],
+  );
+
+  return { data: sorted, status, error, live, actions, reload };
 }
 
 export type Actions = ReturnType<typeof usePlanningData>['actions'];

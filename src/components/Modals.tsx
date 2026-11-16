@@ -409,7 +409,8 @@ export function EmployeeModal({ id, data, actions, ui }: Common & { id?: string 
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return setErr('Vul een naam in.');
-    const item = { ...(ed ? { id: ed.id } : {}), name: name.trim(), role, days: days.slice().sort(), avail, notes };
+    const order = ed ? ed.order : data.employees.reduce((m, x) => Math.max(m, x.order), 0) + 1;
+    const item = { ...(ed ? { id: ed.id } : {}), name: name.trim(), role, days: days.slice().sort(), avail, notes, order };
     ui.closeModal();
     ui.run(actions.save('employees', item), 'Opgeslagen');
   };

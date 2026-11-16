@@ -9,6 +9,7 @@ export interface Employee {
   days: number[]; // 1 = maandag ... 5 = vrijdag
   avail: string;
   notes: string;
+  order: number; // volgorde in het weekbord
 }
 
 export interface Project {

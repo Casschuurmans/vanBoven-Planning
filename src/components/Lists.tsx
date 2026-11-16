@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import type { Actions } from '../data';
 import { DS, fmtLong, fmtShort, todayISO } from '../lib/dates';
 import type { Data, UI } from '../types';
 
@@ -100,13 +101,38 @@ export function ProjectsView({ data, ui }: { data: Data; ui: UI }) {
   );
 }
 
-export function EmployeesView({ data, ui }: { data: Data; ui: UI }) {
+export function EmployeesView({ data, ui, actions }: { data: Data; ui: UI; actions: Actions }) {
+  const dragId = useRef<string | null>(null);
+  const [over, setOver] = useState('');
+  const list = data.employees;
+
+  /** Verplaatst een medewerker een stap (dir) of naar de plek van een andere medewerker (targetId). */
+  const reorder = (id: string, targetId: string | null, dir?: -1 | 1) => {
+    const ids = list.map((e) => e.id);
+    const from = ids.indexOf(id);
+    if (from < 0) return;
+    let to: number;
+    if (dir) {
+      to = from + dir;
+      if (to < 0 || to >= ids.length) return;
+    } else {
+      to = ids.indexOf(targetId ?? '');
+      if (to < 0 || to === from) return;
+    }
+    ids.splice(from, 1);
+    ids.splice(to, 0, id);
+    const changed = ids
+      .map((eid, i) => ({ e: list.find((x) => x.id === eid)!, order: i + 1 }))
+      .filter((x) => x.e.order !== x.order);
+    ui.run(Promise.all(changed.map((x) => actions.save('employees', { ...x.e, order: x.order }))));
+  };
+
   return (
     <>
       <div className="page-head">
         <div>
           <h1>Medewerkers</h1>
-          <p className="sub">{data.employees.length} medewerkers</p>
+          <p className="sub">{list.length} medewerkers. Sleep een rij of gebruik de pijltjes om de volgorde in de weekplanning te bepalen.</p>
         </div>
         <div className="tools">
           <button className="btn primary" onClick={() => ui.openEmployee()}>
@@ -114,7 +140,7 @@ export function EmployeesView({ data, ui }: { data: Data; ui: UI }) {
           </button>
         </div>
       </div>
-      {!data.employees.length ? (
+      {!list.length ? (
         <div className="tbl-scroll">
           <div className="empty">Nog geen medewerkers. Voeg de eerste toe.</div>
         </div>
@@ -123,6 +149,7 @@ export function EmployeesView({ data, ui }: { data: Data; ui: UI }) {
           <table className="list">
             <thead>
               <tr>
+                <th>Volgorde</th>
                 <th>Naam</th>
                 <th>Functie</th>
                 <th>Werkdagen</th>
@@ -132,16 +159,56 @@ export function EmployeesView({ data, ui }: { data: Data; ui: UI }) {
               </tr>
             </thead>
             <tbody>
-              {data.employees.map((e) => (
-                <tr key={e.id}>
+              {list.map((e, i) => (
+                <tr
+                  key={e.id}
+                  draggable
+                  onDragStart={(ev) => {
+                    dragId.current = e.id;
+                    ev.dataTransfer.effectAllowed = 'move';
+                    try {
+                      ev.dataTransfer.setData('text/plain', e.id);
+                    } catch {
+                      /* sommige browsers weigeren dit */
+                    }
+                  }}
+                  onDragOver={(ev) => {
+                    if (!dragId.current) return;
+                    ev.preventDefault();
+                    if (over !== e.id) setOver(e.id);
+                  }}
+                  onDrop={(ev) => {
+                    ev.preventDefault();
+                    const d = dragId.current;
+                    dragId.current = null;
+                    setOver('');
+                    if (d) reorder(d, e.id);
+                  }}
+                  onDragEnd={() => {
+                    dragId.current = null;
+                    setOver('');
+                  }}
+                  style={over === e.id ? { outline: '2px solid var(--gold)', outlineOffset: -2 } : undefined}
+                >
+                  <td style={{ whiteSpace: 'nowrap' }}>
+                    <span style={{ cursor: 'grab', color: 'var(--muted)', marginRight: 6 }} aria-hidden="true" title="Sleep om te verplaatsen">
+                      ⠿
+                    </span>
+                    <button className="btn small icon" disabled={i === 0} onClick={() => reorder(e.id, null, -1)} aria-label={`${e.name} een plek omhoog`}>
+                      ▲
+                    </button>{' '}
+                    <button className="btn small icon" disabled={i === list.length - 1} onClick={() => reorder(e.id, null, 1)} aria-label={`${e.name} een plek omlaag`}>
+                      ▼
+                    </button>
+                  </td>
                   <td>
                     <b>{e.name}</b>
                   </td>
                   <td>{e.role || '–'}</td>
                   <td>
                     <span className="days-pills">
-                      {DS.map((d, i) => (
-                        <span key={d} className={e.days.includes(i + 1) ? 'on' : ''}>
+                      {DS.map((d, k) => (
+                        <span key={d} className={e.days.includes(k + 1) ? 'on' : ''}>
                           {d}
                         </span>
                       ))}

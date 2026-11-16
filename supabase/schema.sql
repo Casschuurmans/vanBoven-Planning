@@ -12,6 +12,7 @@ create table if not exists public.employees (
   work_days int[] not null default '{1,2,3,4,5}',   -- 1 = maandag ... 5 = vrijdag
   availability text not null default '',
   notes text not null default '',
+  sort_order int not null default 0,                -- volgorde in het weekbord
   created_at timestamptz not null default now()
 );
 
