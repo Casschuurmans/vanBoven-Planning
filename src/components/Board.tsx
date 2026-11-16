@@ -4,6 +4,7 @@ import type { Actions } from '../data';
 import { DAYS, DS, addDays, fmtShort, todayISO, weekLabel } from '../lib/dates';
 import { absFor, asgFor, blockLabel, conflictsFor, projectById, textOn } from '../lib/planning';
 import { place } from '../lib/place';
+import { reorderEmployees } from '../lib/reorder';
 import type { Data, UI } from '../types';
 
 interface Props {
@@ -15,7 +16,7 @@ interface Props {
   ui: UI;
 }
 
-type Drag = { type: 'proj' | 'asg'; id: string } | null;
+type Drag = { type: 'proj' | 'asg' | 'emp'; id: string } | null;
 
 const WarnIcon = () => (
   <svg viewBox="0 0 16 16" aria-hidden="true" width="13" height="13">
@@ -54,7 +55,7 @@ export function Board({ data, week, setWeek, thisWeek, actions, ui }: Props) {
   };
   const onDrop = (e: DragEvent, empId: string, date: string) => {
     const d = drag.current;
-    if (!d) return;
+    if (!d || d.type === 'emp') return;
     e.preventDefault();
     endDrag();
     if (d.type === 'proj') {
@@ -187,7 +188,27 @@ export function Board({ data, week, setWeek, thisWeek, actions, ui }: Props) {
             <tbody>
               {data.employees.map((e) => (
                 <tr key={e.id}>
-                  <th scope="row" className="who">
+                  <th
+                    scope="row"
+                    className={'who' + (dropKey === 'emp:' + e.id ? ' drop' : '')}
+                    draggable
+                    title="Sleep om de volgorde van medewerkers te wijzigen"
+                    onDragStart={(ev) => startDrag(ev, { type: 'emp', id: e.id })}
+                    onDragEnd={endDrag}
+                    onDragOver={(ev) => {
+                      if (drag.current?.type !== 'emp') return;
+                      ev.preventDefault();
+                      ev.dataTransfer.dropEffect = 'move';
+                      if (dropKey !== 'emp:' + e.id) setDropKey('emp:' + e.id);
+                    }}
+                    onDrop={(ev) => {
+                      const d = drag.current;
+                      if (!d || d.type !== 'emp') return;
+                      ev.preventDefault();
+                      endDrag();
+                      reorderEmployees(ui, data, actions, d.id, e.id);
+                    }}
+                  >
                     <div>{e.name}</div>
                     <div className="rl">{e.role}</div>
                   </th>
@@ -202,7 +223,7 @@ export function Board({ data, week, setWeek, thisWeek, actions, ui }: Props) {
                         key={d}
                         className={cls}
                         onDragOver={(ev) => {
-                          if (!drag.current) return;
+                          if (!drag.current || drag.current.type === 'emp') return;
                           ev.preventDefault();
                           ev.dataTransfer.dropEffect = drag.current.type === 'proj' || ev.altKey || ev.ctrlKey ? 'copy' : 'move';
                           if (dropKey !== key) setDropKey(key);

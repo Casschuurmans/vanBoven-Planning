@@ -258,3 +258,6 @@ body { margin: 0; }
   .legend { margin-top: 6px; font-size: 9px; }
   tr, td, th { break-inside: avoid; }
 }
+
+.board th.who { cursor: grab; }
+.board th.who.drop { outline: 2px solid var(--gold); outline-offset: -2px; background: var(--gold-soft); }
